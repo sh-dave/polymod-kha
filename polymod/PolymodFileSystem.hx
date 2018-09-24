@@ -1,7 +1,6 @@
 package polymod;
 
 #if kha_debug_html5
-
 import polymod.library.Util;
 
 class PolymodFileSystem {
@@ -81,21 +80,5 @@ class PolymodFileSystem {
 #end
 
 #if kha_kore
-class PolymodFileSystem {
-    public static inline function exists( path: String )
-        return sys.FileSystem.exists(path);
-
-    public static inline function isDirectory( path: String )
-        return sys.FileSystem.isDirectory(path);
-
-    public static inline function readDirectory( path: String )
-        return sys.FileSystem.readDirectory(path);
-
-    public static inline function readDirectoryRecursive( path: String )
-        return []; // TODO (DK) implement me (see Polymod.library.Utils)
-
-    public static inline function getFileContent( path: String )
-        return sys.io.File.getContent(path);
-}
+typedef PolymodFileSystem = polymod.fs.SysFileSystem;
 #end
-
