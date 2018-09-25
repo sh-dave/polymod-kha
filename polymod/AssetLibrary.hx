@@ -1,44 +1,115 @@
 package polymod;
 
-import haxe.io.Bytes; // lime.utils.Bytes
-import polymod.PolymodCore.PolymodError;
+import polymod.AssetType;
+import polymod.library.Util;
 
-class Error {
-    public function new( msg: String ) {
-    }
-}
+#if unifill
+import unifill.Unifill;
+#end
 
-class AudioBuffer {
-}
+typedef AssetLibraryParams = {
+	/**
+	 * full path to the mod's root directory
+	 */
+	dir:String,
 
-class Font {
-}
+	/**
+	 * (optional) if we can't find something, should we try the default asset library?
+	 */
+	?fallback: Dynamic, // AssetLibrary, // TODO (DK)
 
-class Image {
-}
+	/**
+	 * (optional) to combine mods, provide multiple paths to several mod's root directories.
+	 * This takes precedence over the "Dir" parameter and the order matters -- mod files will load from first to last, with last taking precedence
+	 */
+	?dirs:Array<String>,
 
-class Future<T> {
+	/**
+	 * (optional) formatting rules for merging various data formats
+	 */
+	?mergeRules:MergeRules,
+
+	/**
+ 	 * (optional) list of files it ignore in this mod asset library (get the fallback version instead)
+	 */
+	 ?ignoredFiles:Array<String>
 }
 
 class AssetLibrary {
-    var types: Map<String, Dynamic>;
+	public var images: Map<String, String> = new Map();
 
-    public function new() {
-		trace('foo');
+	public var dir: String;
+	public var dirs: Array<String>;
+	public var fallBackToDefault = true;
+	public var fallback: Dynamic; // AssetLibrary; // TODO (DK)
+	public var mergeRules: MergeRules;
+	public var ignoredFiles: Array<String>;
+
+	public function new( params: AssetLibraryParams ) {
+		dir = params.dir;
+
+		if (params.dirs != null) {
+			dirs = params.dirs;
+		}
+
+		fallback = params.fallback;
+		mergeRules = params.mergeRules;
+		ignoredFiles = params.ignoredFiles != null ? params.ignoredFiles.copy() : [];
+		fallBackToDefault = fallback != null;
+		init();
 	}
 
-	public function exists (id:String, type:String):Bool { return false; }
-	public function getAudioBuffer (id:String):AudioBuffer { return null; }
-	public function getBytes (id:String):Bytes { return null; }
-	public function getFont (id:String):Font { return null; }
-	public function getImage (id:String):Image { return null; }
-	public function getPath (id:String):String { return null; }
-	public function getText (id:String):String { return null; }
-	public function loadBytes (id:String):Future<Bytes> { return null; }
-	public function loadFont(id:String):Future<Font> { return null; }
-	public function loadImage(id:String):Future<Image> { return null; }
-	public function loadAudioBuffer(id:String) {}
-	public function loadText(id:String):Future<String> { return null; }
-	public function isLocal (id:String, type:String):Bool { return false; }
-	public function list (type:String):Array<String> { return null; }
+	public function listModFiles( type: AssetType ) : Array<String> {
+		trace('TODO (DK) implement me');
+		return [];
+	}
+
+	function init() {
+		// clearCache();
+		// types = new Map<String, AssetType>();
+
+		if (dirs != null) {
+			for (d in dirs) {
+				initMod(d);
+			}
+		} else {
+			initMod(dir);
+		}
+	}
+
+	function initMod( d: String ) {
+		if (d == null) {
+			return;
+		}
+
+		var all: Array<String> = [];
+
+		try {
+			all = PolymodFileSystem.exists(d)
+				? PolymodFileSystem.readDirectoryRecursive(d)
+				: [];
+		} catch (msg: Dynamic) {
+			throw new Error('ModAssetLibrary._initMod($dir) failed : $msg');
+		}
+
+		for (f in all) {
+			var doti = Util.uLastIndexOf(f,".");
+			var ext:String = doti != -1 ? f.substring(doti+1) : "";
+			ext = ext.toLowerCase();
+
+			switch ext {
+				case "mp3", "ogg", "wav":
+					// types.set(f, AssetType.SOUND);
+				case "jpg", "png":
+					// types.set(f, AssetType.IMAGE);
+					images.set(f, f);
+				case "txt", "xml", "json", "tsv", "csv", "mpf", "tsx", "tmx", "vdf":
+					// types.set(f, AssetType.TEXT);
+				case "ttf", "otf":
+					// types.set(f, AssetType.FONT);
+				default:
+					// types.set(f, AssetType.BINARY);
+			}
+		}
+	}
 }
