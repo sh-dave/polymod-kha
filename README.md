@@ -1,3 +1,1 @@
-# polymod-kha
-
-[Kha-Backend](https://github.com/Kode/Kha.git) for [polymod](https://github.com/larsiusprime/polymod.git)
+this repo is deprecated, development continues in a branch of the polymod repo (https://github.com/sh-dave/polymod/tree/kha-backend) and then be merged into mainline
